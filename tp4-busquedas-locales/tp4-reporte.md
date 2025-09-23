@@ -73,8 +73,6 @@ Se reportan: tasa de éxito (H=0), H promedio y desviación estándar, tiempo pr
 - Tiempo (N=10): ![time10](images/boxplot_time_N10.png)  
 - Estados (N=10): ![states10](images/boxplot_states_N10.png)  
 - Estados (N=4): ![states4](images/boxplot_states_N4.png)  
-- H (N=8): ![H8](images/boxplot_H_N8.png)  
-- H (N=4): ![H4](images/boxplot_H_N4.png)  
 
 ---
 
