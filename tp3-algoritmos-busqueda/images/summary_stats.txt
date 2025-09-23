@@ -1,0 +1,48 @@
+random
+- states_n (S1): mean=4505.47, std=2648.99, n=30
+- actions_count (S1): mean=77.30, std=35.71, n=30
+- actions_cost (S2): mean=406.70, std=219.25, n=30
+- time [s] (S1): mean=0.0200, std=0.0139, n=30
+
+bfs
+- states_n (S1): mean=4515.00, std=2650.17, n=30
+- actions_count (S1): mean=67.30, std=31.85, n=30
+- actions_cost (S2): mean=350.50, std=225.08, n=30
+- time [s] (S1): mean=0.0148, std=0.0108, n=30
+
+dfs
+- states_n (S1): mean=4970.77, std=2807.24, n=30
+- actions_count (S1): mean=1951.83, std=1221.58, n=30
+- actions_cost (S2): mean=5575.83, std=3573.21, n=30
+- time [s] (S1): mean=0.0199, std=0.0107, n=30
+
+dls50
+- states_n (S1): mean=21158.97, std=11650.05, n=30
+- actions_count (S1): mean=49.27, std=0.47, n=11
+- actions_cost (S2): mean=325.00, std=134.00, n=11
+- time [s] (S1): mean=0.0745, std=0.0477, n=30
+
+dls75
+- states_n (S1): mean=47883.23, std=33297.73, n=30
+- actions_count (S1): mean=74.72, std=0.46, n=18
+- actions_cost (S2): mean=501.22, std=144.03, n=18
+- time [s] (S1): mean=0.1653, std=0.1220, n=30
+
+dls100
+- states_n (S1): mean=72899.57, std=52153.57, n=30
+- actions_count (S1): mean=99.20, std=0.65, n=25
+- actions_cost (S2): mean=655.76, std=190.94, n=25
+- time [s] (S1): mean=0.2537, std=0.1843, n=30
+
+ucs
+- states_n (S1): mean=4519.83, std=2656.88, n=30
+- actions_count (S1): mean=67.30, std=31.85, n=30
+- actions_cost (S2): mean=349.90, std=223.89, n=30
+- time [s] (S1): mean=0.0207, std=0.0119, n=30
+
+astar
+- states_n (S1): mean=898.97, std=970.46, n=30
+- actions_count (S1): mean=67.30, std=31.85, n=30
+- actions_cost (S2): mean=349.90, std=223.89, n=30
+- time [s] (S1): mean=0.0043, std=0.0048, n=30
+
