@@ -1,66 +1,89 @@
 # Trabajo Práctico 7B – Parte I  
-## Clasificadores básicos y evaluación de métricas
+## Validación cruzada con árbol de decisión
 
 ---
 
-### 1. Clasificador Aleatorio
+### 1. Descripción general
 
-Se implementó un clasificador aleatorio que asigna una probabilidad uniforme entre 0 y 1 a cada registro y clasifica como "peligroso" cuando la probabilidad es mayor a 0.5.
-
-La función utilizada fue `random_classifier()`, y la evaluación sobre el conjunto de validación se realizó con `evaluar_random_classifier()`.
-
-#### Matriz de confusión
-
-|               | Pred. No Peligroso (0) | Pred. Peligroso (1) |
-|----------------|------------------------|----------------------|
-| **Real No Peligroso (0)** | TN = 2883 | FP = 2784 |
-| **Real Peligroso (1)**    | FN = 370  | TP = 346  |
-
-#### Métricas del modelo
-
-| Métrica       | Valor  |
-|----------------|--------|
-| Accuracy       | 0.5059 |
-| Precision      | 0.1105 |
-| Sensitivity (TPR) | 0.4832 |
-| Specificity (TNR) | 0.5087 |
-
-El clasificador aleatorio presenta valores cercanos a los esperados para un modelo al azar, con una Accuracy próxima al 50% y un AUC teórico aproximado de 0.5.  
-Este resultado sirve como **baseline inferior** para comparar modelos posteriores.
-
-![Distribución de predicciones aleatorias](data/figures/dist_inclinacion_peligrosa.png)
+Se implementó la validación cruzada k-fold para estimar el rendimiento de un **árbol de decisión** sobre el dataset *arbolado público de Mendoza*.  
+El proceso consiste en dividir el conjunto de entrenamiento en *k* subconjuntos estratificados y evaluar el modelo rotando cada fold como conjunto de test.  
+Las métricas calculadas en cada iteración fueron: Accuracy, Precision, Sensitivity y Specificity.
 
 ---
 
-### 2. Clasificador por Clase Mayoritaria
+### 2. Código utilizado
 
-Se implementó un segundo clasificador (`biggerclass_classifier()`) que asigna a todos los registros la clase más frecuente en el conjunto de entrenamiento, en este caso **clase 0 (no peligroso)**.
+```r
+# Ejemplo en R (adaptado del ejercicio 7)
+library(rpart)
 
-#### Matriz de confusión
+create_folds <- function(df, k) {
+  set.seed(42)
+  n <- nrow(df)
+  folds <- sample(rep(1:k, length.out = n))
+  split(1:n, folds)
+}
 
-|               | Pred. No Peligroso (0) | Pred. Peligroso (1) |
-|----------------|------------------------|----------------------|
-| **Real No Peligroso (0)** | TN = 5667 | FP = 0 |
-| **Real Peligroso (1)**    | FN = 716  | TP = 0 |
+cross_validation <- function(df, k = 5) {
+  folds <- create_folds(df, k)
+  resultados <- data.frame()
 
-#### Métricas del modelo
+  for (i in 1:k) {
+    test_idx <- folds[[i]]
+    train_data <- df[-test_idx, ]
+    test_data <- df[test_idx, ]
 
-| Métrica       | Valor  |
-|----------------|--------|
-| Accuracy       | 0.8878 |
-| Precision      | – (no positivos predichos) |
-| Sensitivity (TPR) | 0.0 |
-| Specificity (TNR) | 1.0 |
+    modelo <- rpart(inclinacion_peligrosa ~ altura + circ_tronco_cm +
+                    lat + long + seccion + especie,
+                    data = train_data, method = "class")
 
-Este modelo alcanza una **Accuracy alta (88.8%)**, pero no detecta ningún árbol peligroso (Sensitivity = 0).  
-Demuestra cómo una métrica global puede ser engañosa en presencia de **clases desbalanceadas**, motivo por el cual se utilizará **AUC ROC** como métrica principal en el desafío de Kaggle.
+    pred <- predict(modelo, test_data, type = "class")
 
-![Comparación entre modelos base](data/figures/secciones_peligrosas.png)
+    cm <- table(test_data$inclinacion_peligrosa, pred)
+    TP <- cm[2, 2]; TN <- cm[1, 1]
+    FP <- cm[1, 2]; FN <- cm[2, 1]
+
+    accuracy <- (TP + TN) / sum(cm)
+    precision <- TP / (TP + FP)
+    sensitivity <- TP / (TP + FN)
+    specificity <- TN / (TN + FP)
+
+    resultados <- rbind(resultados, data.frame(
+      fold = i, accuracy, precision, sensitivity, specificity
+    ))
+  }
+
+  resumen <- data.frame(
+    Métrica = c("Accuracy", "Precision", "Sensitivity", "Specificity"),
+    Media = c(mean(resultados$accuracy),
+              mean(resultados$precision),
+              mean(resultados$sensitivity),
+              mean(resultados$specificity)),
+    DesvStd = c(sd(resultados$accuracy),
+                sd(resultados$precision),
+                sd(resultados$sensitivity),
+                sd(resultados$specificity))
+  )
+
+  return(resumen)
+}
+```
+### 3. Resultados obtenidos
+
+| Métrica       | Media   | DesvStd |
+|----------------|---------|---------|
+| Accuracy       | 0.8251  | 0.0035  |
+| Precision      | 0.2377  | 0.0101  |
+| Sensitivity    | 0.2536  | 0.0119  |
+| Specificity    | 0.8972  | 0.0040  |
+
+El modelo de árbol de decisión muestra un rendimiento estable a lo largo de los folds, con una precisión general alta (≈82.5%) y una especificidad cercana al 90%.  
+La precisión y sensibilidad son moderadas, lo que sugiere que el modelo identifica correctamente la mayoría de los árboles no peligrosos, aunque aún falla en detectar una parte importante de los peligrosos.
 
 ---
 
-### 3. Conclusión
+### 4. Conclusión
 
-- El clasificador aleatorio ofrece un punto de partida neutro con desempeño cercano al azar.  
-- El clasificador por clase mayoritaria, aunque muestra una Accuracy elevada, **falla completamente en identificar los árboles peligrosos**, evidenciando la necesidad de métricas más robustas.  
-- En los ejercicios siguientes se aplicará validación cruzada y modelos de decisión para mejorar la detección de la clase minoritaria.
+La validación cruzada refleja un comportamiento típico en conjuntos desbalanceados: el árbol de decisión logra buena exactitud global gracias a su alta especificidad, pero su capacidad de detección de la clase minoritaria (árboles peligrosos) es limitada.  
+Estos resultados constituyen una base sólida sobre la cual mejorar el desempeño mediante modelos más avanzados (por ejemplo, Random Forest o técnicas de balanceo de clases) en el desafío de Kaggle.
+
